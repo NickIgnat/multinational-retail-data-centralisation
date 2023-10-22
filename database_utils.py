@@ -1,4 +1,5 @@
 import yaml
+import sqlalchemy
 class DatabaseConnector:
     def read_db_creds(yaml_creds_path):
         with open(yaml_creds_path) as file:
