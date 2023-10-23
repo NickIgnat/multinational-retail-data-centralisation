@@ -7,4 +7,5 @@ class DatabaseConnector:
 
 
     def init_db_engine():
+        engine = None
         pass
