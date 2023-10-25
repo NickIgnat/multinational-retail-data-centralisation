@@ -12,11 +12,11 @@ class DatabaseConnector:
 
     def init_db_engine(self, creds_path):
         creds = self.read_db_creds(creds_path)
-        username = creds["RDS_USER"]
-        password = creds["RDS_PASSWORD"]
-        host = creds["RDS_HOST"]
-        port = creds["RDS_PORT"]
-        database = creds["RDS_DATABASE"]
+        username = creds["USER"]
+        password = creds["PASSWORD"]
+        host = creds["HOST"]
+        port = creds["PORT"]
+        database = creds["DATABASE"]
 
         connection_string = (
             f"postgresql://{username}:{password}@{host}:{port}/{database}"
@@ -25,8 +25,8 @@ class DatabaseConnector:
         engine = create_engine(connection_string)
         return engine
 
-    def list_db_tables(self, engine):
-        inspector = inspect(engine)
+    def list_db_tables(self):
+        inspector = inspect(self.engine)
         return inspector.get_table_names()
 
     def upload_to_db(self, df, table_name):

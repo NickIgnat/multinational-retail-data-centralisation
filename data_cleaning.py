@@ -35,4 +35,5 @@ class DataCleaning:
                 return c
 
         users.country_code = users.country_code.apply(country_code_formater)
-        remote_db_connector.upload_to_db(users, "dim_users")
+        local_db_connector = DatabaseConnector("local_db_creds.yaml")
+        local_db_connector.upload_to_db(users, "dim_users")
