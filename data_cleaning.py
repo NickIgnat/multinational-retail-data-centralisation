@@ -35,5 +35,28 @@ class DataCleaning:
                 return c
 
         users.country_code = users.country_code.apply(country_code_formater)
+
+        users = users.dropna()
+
         local_db_connector = DatabaseConnector("local_db_creds.yaml")
         local_db_connector.upload_to_db(users, "dim_users")
+
+    def retrieve_pdf_data():
+        df = DataExtractor.retrieve_pdf_data(
+            "https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf"
+        )
+        df = df.drop("Unnamed: 0", axis="columns")
+        df = df.replace("NULL", np.nan)
+        df = df.replace("NULL NULL", np.nan)
+        df.dropna(axis=0, how="all", inplace=True)
+        df["card_number expiry_date"] = df.loc[
+            df["card_number expiry_date"].notna(), "card_number expiry_date"
+        ].str.split(" ")
+        df.card_number[df.card_number.isna()] = df.loc[
+            test.temp_card_number.notna(), "card_number expiry_date"
+        ].str[0]
+        df.expiry_date[df.expiry_date.isna()] = df.loc[
+            test.temp_card_number.notna(), "card_number expiry_date"
+        ].str[1][1:]
+        df = df.drop("card_number expiry_date", axis="columns")
+        df = df.dropna()
