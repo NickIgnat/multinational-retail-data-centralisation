@@ -11,4 +11,4 @@ class DataExtractor:
         return pd.concat(dfs, ignore_index=True)
 
     def retrieve_pdf_data(link):
-        pass
+        df = DataExtractor.retrieve_pdf_data(link)
