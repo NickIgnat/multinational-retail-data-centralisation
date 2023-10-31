@@ -12,3 +12,7 @@ class DataExtractor:
 
     def retrieve_pdf_data(link):
         df = DataExtractor.retrieve_pdf_data(link)
+        df = df.drop("Unnamed: 0", axis="columns")
+        df = df.replace("NULL", np.nan)
+        df = df.replace("NULL NULL", np.nan)
+        df.dropna(axis=0, how="all", inplace=True)
