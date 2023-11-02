@@ -14,15 +14,15 @@ class DataCleaning:
                 continue
         return pd.NaT
 
-    def clean_user_data(self):
+    def clean_user_data():
         remote_db_connector = DatabaseConnector("remote_db_creds.yaml")
         engine = remote_db_connector.engine
         users_df = DataExtractor.read_rds_table("legacy_users", remote_db_connector)
 
         users_df = users_df.replace("NULL", np.nan)
 
-        users_df.join_date = users_df.join_date.apply(self.date_parser)
-        users_df.date_of_birth = users_df.date_of_birth.apply(self.date_parser)
+        users_df.join_date = users_df.join_date.apply(DataCleaning.date_parser)
+        users_df.date_of_birth = users_df.date_of_birth.apply(DataCleaning.date_parser)
 
         users_df.email_address[
             ~users_df.email_address.str.contains("@", na=False)
@@ -40,8 +40,7 @@ class DataCleaning:
 
         users_df = users_df.dropna()
 
-        local_db_connector = DatabaseConnector("local_db_creds.yaml")
-        local_db_connector.upload_to_db(users_df, "dim_users")
+        DatabaseConnector("local_db_creds.yaml").upload_to_db(users_df, "dim_users")
 
     def clean_card_data():
         # getting pdf as a df
@@ -81,3 +80,48 @@ class DataCleaning:
         # removing ? from card number and converting to numeric
         card_df.card_number = card_df.card_number.astype("str").str.replace("?", "")
         card_df.card_number = card_df.card_number.apply(pd.to_numeric, errors="coerce")
+
+        # storing data in db
+        DatabaseConnector("local_db_creds.yaml").upload_to_db(
+            card_df, "dim_card_details"
+        )
+
+    def called_clean_store_data():
+        with open("store_key.yaml") as file:
+            store_api_key = yaml.safe_load(file)
+
+        number_of_stores = DataExtractor.list_number_of_stores(
+            "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores",
+            store_api_key,
+        )
+        stores_df = DataExtractor.retrieve_stores_data(
+            headers=store_api_key, number_of_stores=number_of_stores
+        )
+
+        stores_df = stores_df.drop("index", axis=1)
+        stores_df = stores_df.replace("NULL", np.nan)
+        stores_df.dropna(axis=0, how="all", inplace=True)
+
+        stores_df = stores_df.loc[stores_df.address.str.contains(",")].reset_index(
+            drop=True
+        )
+
+        stores_df.drop("lat", axis=1, inplace=True)
+
+        stores_df.longitude = stores_df.longitude.astype("float")
+
+        stores_df.staff_numbers = stores_df.staff_numbers.str.replace(
+            "[A-Z]|[a-z]", "", regex=True
+        )
+        stores_df.staff_numbers = stores_df.staff_numbers.astype("int")
+
+        stores_df.opening_date = stores_df.opening_date.apply(DataCleaning.date_parser)
+
+        stores_df.latitude = stores_df.latitude.astype("float")
+
+        stores_df.continent = stores_df.continent.str.replace("ee", "")
+
+        # storing data in db
+        DatabaseConnector("local_db_creds.yaml").upload_to_db(
+            stores_df, "dim_store_details"
+        )
