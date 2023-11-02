@@ -1,5 +1,6 @@
 from data_extraction import DataExtractor
 from database_utils import DatabaseConnector
+import yaml
 import pandas as pd
 import numpy as np
 
@@ -125,3 +126,59 @@ class DataCleaning:
         DatabaseConnector("local_db_creds.yaml").upload_to_db(
             stores_df, "dim_store_details"
         )
+
+    def convert_product_weights(products_df, column_to_convert):
+        # function to apply
+        def weight_converter(w):
+            w = w.replace(" ", "")
+            if "kg" in w:
+                return float(w.replace("kg", ""))
+            elif "x" in w:
+                w = w.replace("g", "")
+                number_of_items, weight_of_each = w.split("x")
+                return (float(number_of_items) * float(weight_of_each)) / 1000
+            elif "g" in w:
+                return float(w.replace("g", "")) / 1000
+            elif "ml" in w:
+                return float(w.replace("ml", "")) / 1000
+            elif "oz" in w:
+                return float(w.replace("oz", "")) / 35.274
+            else:
+                return np.nan
+
+        products_df.dropna(inplace=True)
+        products_df[column_to_convert] = products_df[column_to_convert].apply(
+            weight_converter
+        )
+        products_df.dropna(inplace=True)
+
+        products_df.rename(
+            columns={column_to_convert: f"{column_to_convert}_kg"}, inplace=True
+        )
+
+        return products_df
+
+    def clean_products_data():
+        prod_df = DataExtractor.extract_from_s3(
+            "s3://data-handling-public/products.csv"
+        )
+
+        prod_df = DataCleaning.convert_product_weights(prod_df, "weight")
+
+        prod_df.product_price = prod_df.product_price.str.replace("£", "").astype(
+            "float"
+        )
+
+        prod_df.rename(columns={"product_price": "product_price_pounds"}, inplace=True)
+
+        prod_df.EAN = prod_df.EAN.astype("int")
+
+        prod_df.date_added = prod_df.date_added.apply(DataCleaning.date_parser)
+
+        prod_df.removed = prod_df.removed.apply(
+            lambda x: False if x == "Still_avaliable" else True
+        )
+        prod_df.rename(columns={"removed": "is_removed"}, inplace=True)
+
+        # storing data in db
+        DatabaseConnector("local_db_creds.yaml").upload_to_db(prod_df, "dim_products")

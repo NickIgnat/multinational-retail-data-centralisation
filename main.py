@@ -4,7 +4,5 @@ from data_extraction import DataExtractor
 import requests
 
 
-number_of_stores = DataExtractor.list_number_of_stores(
-    "https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores",
-    {"x-api-key": "yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX"},
-)
+# DataCleaning.called_clean_store_data()
+# print(DatabaseConnector("local_db_creds.yaml").list_db_tables())

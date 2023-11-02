@@ -1,6 +1,8 @@
 import pandas as pd
 import tabula
 import requests
+import boto3
+from io import BytesIO
 
 
 class DataExtractor:
@@ -21,3 +23,10 @@ class DataExtractor:
             list_of_dicts.append(requests.get(url, headers=headers).json())
 
         return pd.DataFrame.from_dict(list_of_dicts)
+
+    def extract_from_s3(link):
+        client, bucket, key = link.replace("://", "/").split("/")
+        client = boto3.client(client)
+        prod_obj = client.get_object(Bucket=bucket, Key=key)
+        df = pd.read_csv(BytesIO(prod_obj["Body"].read()), index_col="Unnamed: 0")
+        return df
