@@ -9,10 +9,3 @@ class DataExtractor:
     def retrieve_pdf_data(link):
         dfs = tabula.read_pdf(link, pages="all", stream=True)
         return pd.concat(dfs, ignore_index=True)
-
-    def retrieve_pdf_data(link):
-        df = DataExtractor.retrieve_pdf_data(link)
-        df = df.drop("Unnamed: 0", axis="columns")
-        df = df.replace("NULL", np.nan)
-        df = df.replace("NULL NULL", np.nan)
-        df.dropna(axis=0, how="all", inplace=True)
