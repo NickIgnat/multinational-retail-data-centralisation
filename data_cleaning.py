@@ -182,3 +182,41 @@ class DataCleaning:
 
         # storing data in db
         DatabaseConnector("local_db_creds.yaml").upload_to_db(prod_df, "dim_products")
+
+    def clean_orders_data():
+        orders_df = DataExtractor.read_rds_table(
+            "orders_table", DatabaseConnector("remote_db_creds.yaml")
+        )
+
+        orders_df.set_index("index", inplace=True)
+        orders_df.drop(["first_name", "last_name", "1"], axis=1, inplace=True)
+        orders_df.reset_index(drop=True, inplace=True)
+
+        # storing data in db
+        DatabaseConnector("local_db_creds.yaml").upload_to_db(orders_df, "orders_table")
+
+    def clean_datetime():
+        url = (
+            "https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json"
+        )
+        dt_df = DataExtractor.retrieve_json(url)
+
+        dt_df.replace("NULL", np.nan, inplace=True)
+
+        dt_df["date_time"] = (
+            dt_df.year.astype("str")
+            + " "
+            + dt_df.month.astype("str")
+            + " "
+            + dt_df.day.astype("str")
+            + " "
+            + dt_df.timestamp.astype("str")
+        )
+
+        dt_df.date_time.loc[dt_df.date_time.str.len() == 43] = pd.NaT
+        dt_df.dropna(inplace=True)
+
+        dt_df.date_time = pd.to_datetime(dt_df.date_time, format="%Y %m %d %H:%M:%S")
+        dt_df.drop(["year", "month", "day", "timestamp"], axis=1, inplace=True)
+
+        DatabaseConnector("local_db_creds.yaml").upload_to_db(dt_df, "dim_date_times")
