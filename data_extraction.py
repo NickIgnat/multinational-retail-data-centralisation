@@ -1,9 +1,10 @@
+from io import BytesIO
+from database_utils import DatabaseConnector
+
 import pandas as pd
 import tabula
 import requests
 import boto3
-from io import BytesIO
-from database_utils import DatabaseConnector
 
 
 class DataExtractor:

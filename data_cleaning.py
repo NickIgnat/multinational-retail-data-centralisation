@@ -1,12 +1,13 @@
 from data_extraction import DataExtractor
 from database_utils import DatabaseConnector
+
 import yaml
 import pandas as pd
 import numpy as np
 
 
 class DataCleaning:
-    def date_parser(s):
+    def date_parser(s: str):
         formats = ["%Y-%m-%d", "%Y %B %d", "%Y/%m/%d", "%B %Y %d"]
         for format in formats:
             try:
@@ -59,16 +60,21 @@ class DataCleaning:
         card_df["card_number expiry_date"] = card_df.loc[
             card_df["card_number expiry_date"].notna(), "card_number expiry_date"
         ].str.split(" ")
-        card_df.card_number[card_df.card_number.isna()] = card_df.loc[
-            card_df.card_number.notna(), "card_number expiry_date"
-        ].str[0]
-        card_df.expiry_date[card_df.expiry_date.isna()] = card_df.loc[
-            card_df.expiry_date.notna(), "card_number expiry_date"
-        ].str[1][1:]
+        card_df.card_number.loc[card_df.card_number.isna()] = (
+            card_df["card_number expiry_date"]
+            .loc[card_df.card_number.isna()]
+            .apply(lambda x: x[0])
+        )
+        card_df.expiry_date.loc[card_df.expiry_date.isna()] = (
+            card_df["card_number expiry_date"]
+            .loc[card_df.expiry_date.isna()]
+            .apply(lambda x: x[1][0:])
+        )
         card_df = card_df.drop("card_number expiry_date", axis="columns")
         card_df = card_df.dropna()
 
-        # converting date_payment_confirmed into pandas format and dropping rows with incorrect dates
+        # converting date_payment_confirmed into pandas format
+        # and dropping rows with incorrect dates
         card_df.date_payment_confirmed = card_df.date_payment_confirmed.apply(
             DataCleaning.date_parser
         )
@@ -101,11 +107,12 @@ class DataCleaning:
 
         stores_df = stores_df.drop("index", axis=1)
         stores_df = stores_df.replace("NULL", np.nan)
+        stores_df = stores_df.replace("N/A", np.nan)
         stores_df.dropna(axis=0, how="all", inplace=True)
 
-        stores_df = stores_df.loc[stores_df.address.str.contains(",")].reset_index(
-            drop=True
-        )
+        stores_df = stores_df.loc[
+            stores_df.address.isna() | stores_df.address.str.contains(",")
+        ].reset_index(drop=True)
 
         stores_df.drop("lat", axis=1, inplace=True)
 
@@ -127,7 +134,7 @@ class DataCleaning:
             stores_df, "dim_store_details"
         )
 
-    def convert_product_weights(products_df, column_to_convert):
+    def convert_product_weights(products_df: pd.DataFrame, column_to_convert: str):
         # function to apply
         def weight_converter(w):
             w = w.replace(" ", "")
@@ -220,3 +227,7 @@ class DataCleaning:
         dt_df.drop(["year", "month", "day", "timestamp"], axis=1, inplace=True)
 
         DatabaseConnector("local_db_creds.yaml").upload_to_db(dt_df, "dim_date_times")
+
+
+if __name__ == "__main__":
+    DataCleaning.called_clean_store_data()
