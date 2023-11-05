@@ -62,7 +62,8 @@ ALTER TABLE dim_date_times DROP COLUMN IF EXISTS index;
 
 ALTER TABLE dim_date_times
 	ALTER COLUMN time_period TYPE character varying(10),
-	ALTER COLUMN date_uuid TYPE uuid USING date_uuid::uuid;
+	ALTER COLUMN date_uuid TYPE uuid USING date_uuid::uuid,
+	ALTER COLUMN date_time TYPE date;
 
 -- dim_card_details
 ALTER TABLE dim_card_details DROP COLUMN IF EXISTS index;
