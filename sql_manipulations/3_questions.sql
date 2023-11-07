@@ -53,8 +53,6 @@ SELECT round((sum(product_price_pounds * product_quantity))::numeric, 2) AS tota
 	   to_char(date_time, 'YYYY') AS year, 
 	   to_char(date_time, 'MM') AS month 
 FROM orders_table AS ord
-JOIN dim_store_details AS srd
-ON ord.store_code = srd.store_code
 JOIN dim_products AS prd
 ON ord.product_code = prd.product_code
 JOIN dim_date_times AS dt
