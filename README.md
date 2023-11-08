@@ -6,6 +6,7 @@
   - [Table of Contents](#table-of-contents)
   - [Project Description](#project-description)
   - [Installation and Usage](#installation-and-usage)
+  - [License](#license)
 
 ## Project Description
 
@@ -27,3 +28,7 @@ pip install -r requirements.txt
 
 5. Enter local and remote DB credentials in files remote_db_creds.yaml and local_db_creds.yaml
 6. Run the main.py file
+
+## License
+
+This project is not under a license
