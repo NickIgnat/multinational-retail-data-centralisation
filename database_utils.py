@@ -6,6 +6,7 @@ import yaml
 
 class DatabaseConnector:
     def __init__(self, creds_path: str):
+        '''initialises a database given a path to a file with credentials'''
         self.engine = self.init_db_engine(creds_path)
 
     def read_db_creds(self, yaml_creds_path: str):
