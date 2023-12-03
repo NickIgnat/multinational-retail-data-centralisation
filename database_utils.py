@@ -10,6 +10,7 @@ class DatabaseConnector:
         self.engine = self.init_db_engine(creds_path)
 
     def read_db_creds(self, yaml_creds_path: str):
+        '''reads db reds from a yaml path, returns creds'''
         with open(yaml_creds_path) as file:
             return yaml.safe_load(file)
 
