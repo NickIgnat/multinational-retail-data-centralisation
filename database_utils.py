@@ -15,6 +15,7 @@ class DatabaseConnector:
             return yaml.safe_load(file)
 
     def init_db_engine(self, creds_path: str):
+        '''initiates database engine with creds, returns engine'''
         creds = self.read_db_creds(creds_path)
         username = creds["USER"]
         password = creds["PASSWORD"]
